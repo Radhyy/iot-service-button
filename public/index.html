@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Button Logger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Live IoT Dashboard</h1>
+        <p class="text-gray-600 mb-8">Memantau data tombol yang ditekan oleh siswa secara real-time dari ESP32.</p>
+        
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Siswa</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tombol Ditekan</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTable" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function getBadgeColor(type) {
+            if (type === 'SUCCESS') return 'bg-green-100 text-green-800 border-green-200';
+            if (type === 'STRUGGLE') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            if (type === 'HELP') return 'bg-red-100 text-red-800 border-red-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/get-interactions');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('dataTable');
+                tableBody.innerHTML = ''; // clear loading
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Belum ada data masuk.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const date = new Date(item.created_at).toLocaleString('id-ID');
+                    const studentName = item.student_name || `Murid ID: ${item.student_id}`;
+                    const badgeClass = getBadgeColor(item.button_type);
+
+                    const row = `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${studentName}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${badgeClass}">
+                                    ${item.button_type}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                document.getElementById('dataTable').innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-red-500">Gagal memuat data.</td></tr>';
+            }
+        }
+
+        // Fetch on load and every 3 seconds
+        fetchData();
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+</html>

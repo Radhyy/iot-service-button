@@ -13,7 +13,7 @@ const char* password = "YOUR_WIFI_PASSWORD";
 
 // Your Netlify URL (Don't forget the https:// and /api/record-button)
 // Example: https://my-iot-backend.netlify.app/api/record-button
-const char* serverName = "YOUR_NETLIFY_URL_HERE";
+const char* serverName = "https://iotservicebutton.netlify.app/api/record-button";
 
 // Pin Definitions
 const int PIN_SUCCESS = 14;  // Green Button
